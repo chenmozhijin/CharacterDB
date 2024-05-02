@@ -73,7 +73,7 @@ jobs:
           - name: 复制与拆分
             run: |
                 mkdir -p upload/data
-                cp -f character.jsonl upload/data/bangumi-character.jsonl
+                cp -f character.jsonl upload/data/CharacterDB.jsonl
 
           - name: 生成 release 相关信息
             id: release-info
