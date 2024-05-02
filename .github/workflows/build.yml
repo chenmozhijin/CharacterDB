@@ -10,6 +10,13 @@ jobs:
     characterinfo:
       runs-on: ubuntu-22.04
       steps: 
+            - name: 清理空间
+              run: |
+                sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /etc/mysql /etc/php
+                sudo -E apt-mark hold grub-efi-amd64-signed
+                sudo -E apt update
+                sudo -E apt -y purge azure-cli* docker* ghc* zulu* llvm* firefox google* dotnet* powershell* openjdk* mysql* php* mongodb* dotnet* snap* moby* 2>&1
+
             - name: 将存储库签出到运行器
               uses: actions/checkout@v4
 
@@ -31,6 +38,7 @@ jobs:
                 unzip -o -d . dl/bgm_archive.zip
                 wget -O 'dl/vndb.tar.zst' 'https://dl.vndb.org/dump/vndb-db-latest.tar.zst'
                 tar -I zstd -xvf  dl/vndb.tar.zst -C vndb/
+                ls -la $(find $GITHUB_WORKSPACE -type d)
                 wget -O 'dl/jawiki-latest-pages-articles.xml.bz2' 'https://dumps.wikimedia.org/jawiki/latest/jawiki-latest-pages-articles.xml.bz2'
                 bzip2 -d 'dl/jawiki-latest-pages-articles.xml.bz2'
                 ls -la $(find $GITHUB_WORKSPACE -type d)
