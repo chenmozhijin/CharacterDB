@@ -1,0 +1,8 @@
+tqdm
+janome
+opencc
+bs4
+requests
+lxml
+regex
+mwparserfromhell

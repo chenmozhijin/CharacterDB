@@ -1,0 +1,84 @@
+name: update
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+permissions:
+    contents: write
+    discussions: write
+jobs:
+    characterinfo:
+      runs-on: ubuntu-22.04
+      steps: 
+            - name: 将存储库签出到运行器
+              uses: actions/checkout@v4
+
+            - uses: actions/setup-python@v5
+              with:
+                python-version: 3.11
+                architecture: x64
+
+            - name: 安装依赖
+              run: |
+                pip install -r requirements.txt
+                sudo apt-get -y install bzip2 wget curl jp unzip zstd
+
+            - name: 下载与解压
+              run: |
+                mkdir -p dl vndb
+                bgm_archive_dl_url=$(curl -s "https://api.github.com/repos/bangumi/Archive/releases/tags/archive" | jq -r '.assets | max_by(.created_at) | .browser_download_url')
+                wget -O 'dl/bgm_archive.zip' "$asset_download_url"
+                unzip -o -d . dl/bgm_archive.zip
+                wget -O 'dl/vndb.tar.zst' 'https://dl.vndb.org/dump/vndb-db-latest.tar.zst'
+                tar -I zstd -xvf  dl/vndb.tar.zst -C vndb/
+                wget -O 'dl/jawiki-latest-pages-articles.xml.bz2' 'https://dumps.wikimedia.org/jawiki/latest/jawiki-latest-pages-articles.xml.bz2'
+                bzip2 -d 'dl/jawiki-latest-pages-articles.xml.bz2'
+                ls -la $(find $GITHUB_WORKSPACE -type d)
+
+            - name: 运行脚本
+              run: |
+                python ja_wiki_p.py 'dl/jawiki-latest-pages-articles.xml'
+
+            - name: 上传文件
+              uses: actions/upload-artifact@v3
+              with:
+                  name: characterinfo
+                  path: "character.jsonl"
+
+
+    push: 
+        needs: characterinfo
+        runs-on: ubuntu-22.04
+        steps:
+          - name: 将存储库签出到运行器
+            uses: actions/checkout@v4
+            with:
+                path: push
+
+          - name: 下载characterinfo文本
+            uses: actions/download-artifact@v3
+            with:
+                name: characterinfo
+
+          - name: 复制与拆分
+            run: |
+                mkdir -p upload/data
+                cp -f character.jsonl upload/data/bangumi-character.jsonl
+
+          - name: 生成 release 相关信息
+            id: release-info
+            run: |
+              echo 处理完成于$(date +"%Y-%m-%d %H:%M") >> upload/release.txt
+              echo "RELEASE_NAME=VisualNovel-Dataset v$(date +"%y.%m.%d-%H%M")" >> "$GITHUB_OUTPUT"
+              echo "RELEASE_TAG_NAME=v$(date +"%y.%m.%d-%H%M")" >> "$GITHUB_OUTPUT"
+              
+
+          - name: 上传json到 Release
+            uses: softprops/action-gh-release@v0.1.15
+            with:
+             name: ${{ steps.release-info.outputs.RELEASE_NAME }}
+             tag_name: ${{ steps.release-info.outputs.RELEASE_TAG_NAME }}
+             files: upload/data/*
+             body_path: upload/release.txt
+
+          - name: 检测
+            run: ls -la $(find $GITHUB_WORKSPACE -type d)
