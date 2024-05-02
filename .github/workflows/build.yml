@@ -2,6 +2,7 @@ name: update
 on:
   schedule:
     - cron: '0 0 1 * *'
+  workflow_dispatch:
 permissions:
     contents: write
     discussions: write
