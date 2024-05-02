@@ -27,7 +27,7 @@ jobs:
               run: |
                 mkdir -p dl vndb
                 bgm_archive_dl_url=$(curl -s "https://api.github.com/repos/bangumi/Archive/releases/tags/archive" | jq -r '.assets | max_by(.created_at) | .browser_download_url')
-                wget -O 'dl/bgm_archive.zip' "$asset_download_url"
+                wget -O 'dl/bgm_archive.zip' "$bgm_archive_dl_url"
                 unzip -o -d . dl/bgm_archive.zip
                 wget -O 'dl/vndb.tar.zst' 'https://dl.vndb.org/dump/vndb-db-latest.tar.zst'
                 tar -I zstd -xvf  dl/vndb.tar.zst -C vndb/
