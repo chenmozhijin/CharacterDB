@@ -129,6 +129,7 @@ dmypy.json
 *.jsonl
 *.jsonlines
 *.json
+!jp_surnames.json
 vndb/
 maybe_ja_names.txt
 test.py
