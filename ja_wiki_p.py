@@ -229,14 +229,14 @@ def extract_data() -> dict:  # noqa: PLR0915
     return subjects
 
 
-# subjects = extract_data()
+subjects = extract_data()
 # with open("jawiki_.json", "w", encoding="utf-8") as f:
 #     json.dump(subjects, f, ensure_ascii=False, indent=4)
-subjects = {}
-with open("jawiki_.json", encoding="utf-8") as f:
-    O_subjects: dict = json.load(f)
-    for key, value in O_subjects.items():
-        subjects[int(key)] = value
+# subjects = {}
+# with open("jawiki_.json", encoding="utf-8") as f:
+#     O_subjects: dict = json.load(f)
+#     for key, value in O_subjects.items():
+#         subjects[int(key)] = value
 
 logging.info("开始处理标题")
 for i in tqdm(range(len(subjects)), total=len(subjects)):
