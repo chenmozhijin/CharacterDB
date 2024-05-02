@@ -1,5 +1,9 @@
 # 角色信息数据库
 
+## 下载
+
+[Releases](https://github.com/chenmozhijin/CharacterDB/releases)
+
 ## 数据结构
 
 ```json
