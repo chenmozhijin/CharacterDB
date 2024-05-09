@@ -79,7 +79,7 @@ jobs:
             id: release-info
             run: |
               echo 处理完成于$(date +"%Y-%m-%d %H:%M") >> upload/release.txt
-              echo "RELEASE_NAME=VisualNovel-Dataset v$(date +"%y.%m.%d-%H%M")" >> "$GITHUB_OUTPUT"
+              echo "RELEASE_NAME=Character-Dataset v$(date +"%y.%m.%d-%H%M")" >> "$GITHUB_OUTPUT"
               echo "RELEASE_TAG_NAME=v$(date +"%y.%m.%d-%H%M")" >> "$GITHUB_OUTPUT"
               
 
