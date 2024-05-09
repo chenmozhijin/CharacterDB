@@ -828,9 +828,8 @@ for content in tqdm(contents, total=content_total):
                 info[key] = ""
             continue
         cleared_item = clear(item[0])
-        cleared_item = re.split(r"[／/、]", cleared_item)
         if key not in ["gender"]:
-            cleared_item = [cleared_item]
+            cleared_item = re.split(r"[／/、]", cleared_item)
         info[key] = cleared_item
 
     name: list[str] = info["name"]
