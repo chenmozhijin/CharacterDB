@@ -151,7 +151,7 @@ def load_data() -> (  # noqa: PLR0915
                 "id": info_list[0],
                 # "image": info_list[1],
                 # "gender": info_list[2],
-                "spoil_gender": info_list[3],
+                # "spoil_gender": info_list[3],
                 "bloodt": info_list[4],
                 "cup_size": info_list[5],
                 "main": info_list[6],
@@ -828,11 +828,8 @@ for content in tqdm(contents, total=content_total):
                 info[key] = ""
             continue
         cleared_item = clear(item[0])
-        if "／" in cleared_item:
-            cleared_item = re.sub(r"\s*[／/]\s*", "/", cleared_item)
-        if "/" in cleared_item:
-            cleared_item = cleared_item.split("/")
-        elif key not in ["gender"]:
+        cleared_item = re.split(r"[／/、]", cleared_item)
+        if key not in ["gender"]:
             cleared_item = [cleared_item]
         info[key] = cleared_item
 
