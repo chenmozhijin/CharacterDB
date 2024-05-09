@@ -29,10 +29,12 @@ def get_jawiki_char_names(char_name: str) -> list[str]:
     spilt_brackets += re.findall(r"（(.*?)）", char_name)
     no_brackets_names = re.split(r"\(.*?\)|（.*?）", char_name)
     for bracket in spilt_brackets:
-        if re.findall(r"通称|版|,|-|\d\d\d\d", bracket):
+        if re.findall(r"通称|版|,|-|\d\d\d\d|#", bracket):
             continue
         result.append(bracket)
     for name in no_brackets_names:
+        if "#" in name:
+            continue
         ja_en = re.findall(r"([\u3040-\u309F\u30A0-\u30FF・])+\s+([a-zA-Z ]+)", name.strip())
         if ja_en:
             for item in ja_en:
@@ -176,9 +178,7 @@ def load_data() -> (  # noqa: PLR0915
                 if info_list[16].replace(" ", "") not in name_chars_mapping:
                     name_chars_mapping[info_list[16].replace(" ", "")] = []
                 name_chars_mapping[info_list[16]].append(info_dict["id"])
-                name_chars_mapping[info_list[16].replace(" ", "")].append(
-                    info_dict["id"]
-                )
+                name_chars_mapping[info_list[16].replace(" ", "")].append(info_dict["id"])
             if info_list[17]:
                 if info_list[17] not in name_chars_mapping:
                     name_chars_mapping[info_list[17]] = []
@@ -212,7 +212,7 @@ def load_data() -> (  # noqa: PLR0915
                 "zh_name": subject_zh_name,
                 "type": subject_type,
                 "role_type": role_type,
-            }
+            },
         )
 
     logging.info("开始处理chars")
@@ -282,7 +282,7 @@ def is_english_with_symbols(text: str) -> bool:
 
 def subject_name_compare(name1: str, name2: str) -> bool:
     def clear2(name: str) -> str:
-        name = name.replace("*", "＊")  # 千恋＊万花
+        name = name.replace("*", "＊")  # 千恋＊万花  # noqa: RUF003
         name = name.replace("「", "")
         return name.replace("」", "")
 
@@ -381,7 +381,7 @@ def get_jawiki_text(names: list[str], subjects: list[dict]) -> tuple[list, list]
                     if subject_name_compare(w_subject, subject["name"]):
                         w_names += get_jawiki_char_names(w_name)
                         result.append(jawiki[w_id]["char"][w_name].strip())
-    return list(set(result)), w_names
+    return list(set(result)), list(set(w_names))
 
 
 def get_token_info(token: Token) -> tuple[str, str]:
@@ -660,7 +660,7 @@ def analyze(names: list[str], subjects: list[dict], summary: str) -> tuple[list,
             '巫女': ('巫女', False),
             '司祭': ('祭司', False),
             '賢者': ('贤者', False),
-            '使者': ('使 者', False),
+            '使者': ('使者', False),
             '隊長': ('队长', False),
             '首相': ('首相', False),
             '皇子': ('皇子', False),
@@ -798,9 +798,7 @@ no_ja_count = 0
 content_total = len(contents)
 for content in tqdm(contents, total=content_total):
     # 获取infobox内容
-    infobox = content["infobox"].replace("\r\n", "\n")
-    if content["id"] == 13658:
-        pass
+    infobox: str = content["infobox"].replace("\r\n", "\n")
     info = {}
     # 使用正则表达式从infobox中获取简体中文名
     info["name"] = [content["name"]]
@@ -819,8 +817,6 @@ for content in tqdm(contents, total=content_total):
     info["nick_name"] = re.findall(r"\[昵称\|([^\]]+)\]", infobox)
     info["nick_name2"] = re.findall(r"\[第二昵称\|([^\]]+)\]", infobox)
     for key, item in info.items():
-        if key == "gender" and item:
-            pass
         if not item or item[0] == "":
             if key not in ["gender"]:
                 info[key] = []
@@ -833,31 +829,15 @@ for content in tqdm(contents, total=content_total):
         info[key] = cleared_item
 
     name: list[str] = info["name"]
-    zh_name: list[str] = info["zh_name"]
-    zh_name2: list[str] = info["zh_name2"]
-    ja_name: list[str] = info["ja_name"]
-    ja_name2: list[str] = info["ja_name2"]
-    kana_name: list[str] = info["kana_name"]
-    kana_name2: list[str] = info["kana_name2"]
-    en_name: list[str] = info["en_name"]
-    en_name2: list[str] = info["en_name2"]
+    zh_name: list[str] = info["zh_name"] + info["zh_name2"]
+    ja_name: list[str] = info["ja_name"] + info["ja_name2"]
+    kana_name: list[str] = info["kana_name"] + info["kana_name2"]
+    en_name: list[str] = info["en_name"] + info["en_name2"]
     gender: str = info["gender"]
-    nick_name: list[str] = info["nick_name"]
-    nick_name2: list[str] = info["nick_name2"]
+    nick_name: list[str] = info["nick_name"] + info["nick_name2"]
     info = None
 
     subjects = subjects_mapping.get(content["id"], [])
-
-    if zh_name2:
-        zh_name.extend(zh_name2)
-    if ja_name2:
-        ja_name.extend(ja_name2)
-    if kana_name2:
-        kana_name.extend(kana_name2)
-    if en_name2:
-        en_name.extend(en_name2)
-    if nick_name2:
-        nick_name.extend(nick_name2)
 
     if not zh_name:
         for n in name:
@@ -875,7 +855,7 @@ for content in tqdm(contents, total=content_total):
                     and is_japanese(n)
                 )
                 or is_jp_name(n)
-            ) and not is_from_zh_subject(subjects):
+            ) and (not is_from_zh_subject(subjects) or include_japanese(n)):
                 ja_name.append(n)
             elif not is_english_with_symbols(n) and is_japanese(n):
                 maybe_ja_names.append(n)
@@ -957,25 +937,33 @@ for content in tqdm(contents, total=content_total):
         if name and name not in ja_name and is_japanese(name):
             for i, ja_name_ in enumerate(ja_name):
                 if (
-                    " " not in ja_name_
+                    "・" not in ja_name_
+                    and " " not in ja_name_
                     and " " in name
                     and ja_name_ == name.replace(" ", "")
                 ):
                     ja_name[i] = name
                     break
             else:
-                ja_name.append(name)
+                if re.fullmatch(r"[\u3040-\u309F\u30A0-\u30FF・ ]+", name) and name not in kana_name:
+                    kana_name.append(name)
+                elif (name not in kana_name
+                        and (
+                        " " in name
+                        or "・" in name
+                        or name not in [re.sub(r"[・ ]", "", n_) for n_ in ja_name])):
+                    ja_name.append(name)
 
     if tags:
         tags_match_count += 1
 
     result = {
         "id": content["id"],
-        "zh": zh_name,
-        "ja": ja_name,
-        "en": en_name,
-        "kana": kana_name,
-        "nick_name": nick_name,
+        "zh": list(set(zh_name)),
+        "ja": list(set(ja_name)),
+        "en": list(set(en_name)),
+        "kana": list(set(kana_name)),
+        "nick_name": list(set(nick_name)),
         "gender": gender,
         "subjects": subjects,
         "info": info,
