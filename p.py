@@ -954,6 +954,12 @@ for content in tqdm(contents, total=content_total):
                         or name not in [re.sub(r"[・ ]", "", n_) for n_ in ja_name])):
                     ja_name.append(name)
 
+    for ja_n in ja_name:  # 处理假名
+        if re.fullmatch(r"[\u3040-\u309F\u30A0-\u30FF・ ]+", ja_n):
+            ja_name.remove(ja_n)
+            if ja_n not in kana_name:
+                kana_name.append(ja_n)
+
     if tags:
         tags_match_count += 1
 
@@ -972,9 +978,22 @@ for content in tqdm(contents, total=content_total):
     results.append(result)
 
 logging.info(
-    f"总角色数量: {content_total}, 处理后的角色数量: {len(results)}匹配到vndb信息的角色数量: {info_match_count} ({info_match_count / len(results) * 100:.2f} %), 有tags的角色数量{tags_match_count} ({tags_match_count / len(results) * 100:.2f} %),没有获取到中文名的角色数量: {no_zh_count}, 没有获取到日文名的角色数量{no_ja_count}")
+    f"总角色数量: {content_total}, 处理后的角色数量: {len(results)}匹配到vndb信息的角色数量: {info_match_count} ({info_match_count / len(results) * 100:.2f} %), 有tags的角色数量{tags_match_count} ({tags_match_count / len(results) * 100:.2f} %),没有获取到中文名的角色数量: {no_zh_count}, 没有获取到日文名或假名的角色数量{no_ja_count}")
 
-logging.info("处理人物信息")
+logging.info("保存结果")
+
+with open("report.json", "w", encoding="utf-8") as file:
+    json.dump(
+        {
+            "content_total": len(results),
+            "vndb_match_count": info_match_count,
+            "tags_match_count": tags_match_count,
+            "no_zh_count": no_zh_count,
+            "no_ja_count": no_ja_count,
+        },
+        file,
+        ensure_ascii=False,
+        indent=4)
 
 with open("maybe_ja_names.txt", "w", encoding="utf-8") as file:
     json.dump(maybe_ja_names, file, ensure_ascii=False, indent=4)

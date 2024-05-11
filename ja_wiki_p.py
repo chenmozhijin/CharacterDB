@@ -158,6 +158,18 @@ def extract_data() -> dict:  # noqa: PLR0915
     title = None
     # 遍历解析器生成的事件流
     for event, element in tqdm(context):
+        if event == "start" and element.tag.endswith("page"):
+            get_page_id = True
+            page_id = ""
+            element.clear()
+            continue
+        if element.tag.endswith("id"):
+            if get_page_id and element.text:
+                page_id += element.text
+            if event == "end":
+                get_page_id = False
+            element.clear()
+            continue
         if not element.tag.endswith(("title", "text")):
             element.clear()
             continue
@@ -221,7 +233,10 @@ def extract_data() -> dict:  # noqa: PLR0915
                 title_list[index] = title_
                 if title_ in ["関連項目"]:
                     title_list.remove(title_)
-            subjects[len(subjects)] = {"titles": title_list, "char": char_text_dict}
+
+            if int(page_id) in subjects:
+                raise Exception(f"{page_id} 重复")
+            subjects[int(page_id)] = {"titles": title_list, "char": char_text_dict}
 
         else:
             element.clear()
@@ -239,13 +254,13 @@ subjects = extract_data()
 #         subjects[int(key)] = value
 
 logging.info("开始处理标题")
-for i in tqdm(range(len(subjects)), total=len(subjects)):
+for i in tqdm(subjects, total=len(subjects)):
     subjects[i]["titles"] = process_jawiki_titles(subjects[i]["titles"])
 
 logging.info("处理标题完成")
 
 logging.info("开始处理内容")
-for i in tqdm(range(len(subjects)), total=len(subjects)):
+for i in tqdm(subjects, total=len(subjects)):
     if i == 16:
         pass
     subject: dict = subjects[i]
