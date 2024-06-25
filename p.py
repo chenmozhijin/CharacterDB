@@ -952,7 +952,7 @@ for content in tqdm(contents, total=content_total):
                         " " in name
                         or "・" in name
                         or name not in [re.sub(r"[・ ]", "", n_) for n_ in ja_name])):
-                    ja_name.append(name)
+                    ja_name.append(re.split(r"[／/、]", ja_name))
 
     for ja_n in ja_name:  # 处理假名
         if re.fullmatch(r"[\u3040-\u309F\u30A0-\u30FF・ ]+", ja_n):
