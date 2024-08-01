@@ -879,9 +879,9 @@ for content in tqdm(contents, total=content_total):
 
     # 匹配VNDB中的角色信息
     names = zh_name + ja_name + en_name + [name.replace(" ", "") for name in ja_name]
-    for name in names:
-        if name in name_chars_mapping:
-            char_ids = name_chars_mapping[name]
+    for _name in names:
+        if _name in name_chars_mapping:
+            char_ids = name_chars_mapping[_name]
             if len(char_ids) == 1:
                 info = chars[char_ids[0]].copy()
                 info_match_count += 1
@@ -945,14 +945,15 @@ for content in tqdm(contents, total=content_total):
                     ja_name[i] = name
                     break
             else:
-                if re.fullmatch(r"[\u3040-\u309F\u30A0-\u30FF・ ]+", name) and name not in kana_name:
-                    kana_name.append(name)
-                elif (name not in kana_name
-                        and (
-                        " " in name
-                        or "・" in name
-                        or name not in [re.sub(r"[・ ]", "", n_) for n_ in ja_name])):
-                    ja_name.append(re.split(r"[／/、]", ja_name))
+                for _name in re.split(r"[／/、]", name):
+                    if re.fullmatch(r"[\u3040-\u309F\u30A0-\u30FF・ ]+", _name) and _name not in kana_name:
+                        kana_name.append(_name)
+                    elif (_name not in kana_name
+                            and (
+                            " " in _name
+                            or "・" in _name
+                            or _name not in [re.sub(r"[・ ]", "", n_) for n_ in ja_name])):
+                        ja_name.extend(_name)
 
     for ja_n in ja_name:  # 处理假名
         if re.fullmatch(r"[\u3040-\u309F\u30A0-\u30FF・ ]+", ja_n):
