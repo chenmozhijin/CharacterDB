@@ -18,7 +18,7 @@ jobs:
                 sudo -E apt -y purge azure-cli* docker* ghc* zulu* llvm* firefox google* dotnet* powershell* openjdk* mysql* php* mongodb* dotnet* snap* 2>&1
 
             - name: 将存储库签出到运行器
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - uses: actions/setup-python@v5
               with:
@@ -50,7 +50,7 @@ jobs:
               run: python p.py
 
             - name: 上传文件
-              uses: actions/upload-artifact@V4
+              uses: actions/upload-artifact@v5
               with:
                   name: characterinfo
                   path: "character.jsonl"
@@ -61,12 +61,12 @@ jobs:
         runs-on: ubuntu-22.04
         steps:
           - name: 将存储库签出到运行器
-            uses: actions/checkout@v4
+            uses: actions/checkout@v5
             with:
                 path: push
 
           - name: 下载characterinfo文本
-            uses: actions/download-artifact@V4
+            uses: actions/download-artifact@v5
             with:
                 name: characterinfo
 
